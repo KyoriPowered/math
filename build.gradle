@@ -1,0 +1,82 @@
+plugins {
+  id 'java-library'
+  id 'maven-publish'
+  id 'signing'
+  id 'net.kyori.invent' version '1.0.4'
+  id 'net.kyori.invent-javadoc-jar' version '1.0.4'
+  id 'net.kyori.invent-sonatype-repository' version '1.0.4'
+  id 'net.kyori.invent-sources-jar' version '1.0.4'
+  id 'net.minecrell.licenser' version '0.4'
+}
+
+group 'net.kyori'
+description 'A math library.'
+version '1.0.0-SNAPSHOT'
+
+tasks.withType(JavaCompile) {
+  options.compilerArgs += ['-Xlint:all']
+}
+
+license {
+  header project.file('header.txt')
+  include '**/*.java'
+  newLine false
+}
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
+
+jar {
+  manifest.attributes(
+    'Automatic-Module-Name': 'net.kyori.math'
+  )
+}
+
+inventSonatypeRepository.enabled = System.getenv('TRAVIS') == null || project.version.endsWith('-SNAPSHOT')
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      from components.java
+
+      artifact javadocJar
+      artifact sourcesJar
+
+      pom {
+        name = project.name
+        description = project.description
+
+        developers {
+          developer {
+            id = 'kashike'
+          }
+        }
+
+        issueManagement {
+          system = 'GitHub Issues'
+          url = 'https://github.com/KyoriPowered/math/issues'
+        }
+
+        licenses {
+          license {
+            name = 'MIT License'
+            url = 'https://opensource.org/licenses/MIT'
+          }
+        }
+
+        scm {
+          connection = 'scm:git@github.com:KyoriPowered/math.git'
+          developerConnection = 'scm:git@github.com:KyoriPowered/math.git'
+          url = 'https://github.com/KyoriPowered/math/'
+        }
+      }
+    }
+  }
+}
+
+signing {
+  required { project.hasProperty('signing.keyId') && gradle.taskGraph.hasTask(':publish') && project.version.endsWith('-SNAPSHOT') }
+  sign publishing.publications.maven
+}
